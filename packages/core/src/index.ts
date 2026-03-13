@@ -55,9 +55,16 @@ function argmax(v: Vector): number {
     return maxIdx;
 }
 
+function softmax(v: Vector): Vector {
+    const maxVal = Math.max(...v);
+    const exps = v.map(val => Math.exp(val - maxVal));
+    const sum = exps.reduce((a, b) => a + b, 0);
+    return exps.map(val => val / sum);
+}
+
 // --- Inference ---
 
-export function runInference(image: Vector, layers: LayerWeights[]): number {
+export function runInference(image: Vector, layers: LayerWeights[]): { prediction: number, probabilities: number[] } {
     let activations = image;
 
     for (let i = 0; i < layers.length; i++) {
@@ -72,5 +79,8 @@ export function runInference(image: Vector, layers: LayerWeights[]): number {
         }
     }
 
-    return argmax(activations);
+    return {
+        prediction: argmax(activations),
+        probabilities: softmax(activations)
+    };
 }

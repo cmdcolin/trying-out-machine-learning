@@ -7,6 +7,7 @@
     "start": "ts-node index.ts"
   },
   "dependencies": {
+    "@mnist-jax/core": "workspace:*",
     "typescript": "^5.0.0",
     "ts-node": "^10.9.1",
     "@types/node": "^20.0.0"
