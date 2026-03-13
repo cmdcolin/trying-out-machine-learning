@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef } from 'react';
 import './App.css';
-import { runInference } from '@mnist-jax/core';
+import { runInference as runCpuInference } from '@mnist-jax/core';
+import { WebGPUInference } from '@mnist-jax/webgpu';
 import type { LayerWeights, TestExample } from '@mnist-jax/core';
 import MNISTCanvas from './MNISTCanvas';
 
@@ -16,13 +17,31 @@ function App() {
   const [probs, setProbs] = useState<number[]>([]);
   const [testResults, setTestResults] = useState<{label: number, pred: number}[]>([]);
   const [debugData, setDebugData] = useState<number[]>([]);
+  const [useGpu, setUseGpu] = useState(false);
+  const [gpuSupported, setGpuSupported] = useState(false);
+  const gpuEngine = useRef<WebGPUInference | null>(null);
   const debugCanvasRef = useRef<HTMLCanvasElement>(null);
 
   useEffect(() => {
-    // Run inference on all test images on load
+    // Check WebGPU support and init
+    const initGpu = async () => {
+      try {
+        const engine = new WebGPUInference();
+        await engine.init();
+        gpuEngine.current = engine;
+        setGpuSupported(true);
+        setUseGpu(true); // Default to GPU if available
+      } catch (e) {
+        console.warn("WebGPU not available:", e);
+        setGpuSupported(false);
+      }
+    };
+    initGpu();
+
+    // Run inference on all test images on load (CPU)
     const results = testImages.map(ex => ({
       label: ex.label,
-      pred: runInference(ex.image, weights).prediction
+      pred: runCpuInference(ex.image, weights).prediction
     }));
     setTestResults(results);
   }, []);
@@ -44,11 +63,18 @@ function App() {
     }
   }, [debugData]);
 
-  const handleDraw = (data: number[]) => {
+  const handleDraw = async (data: number[]) => {
     setDebugData(data);
-    const { prediction: pred, probabilities } = runInference(data, weights);
-    setPrediction(pred);
-    setProbs(probabilities);
+    
+    if (useGpu && gpuEngine.current) {
+      const { prediction: pred, probabilities } = await gpuEngine.current.runInference(data, weights);
+      setPrediction(pred);
+      setProbs(probabilities);
+    } else {
+      const { prediction: pred, probabilities } = runCpuInference(data, weights);
+      setPrediction(pred);
+      setProbs(probabilities);
+    }
   };
 
   const handleClear = () => {
@@ -59,7 +85,24 @@ function App() {
 
   return (
     <div className="App">
-      <h1>MNIST JAX Demo</h1>
+      <header className="app-header">
+        <h1>MNIST JAX Demo</h1>
+        <div className="mode-selector">
+          <span className={!useGpu ? 'active' : ''}>CPU</span>
+          <label className="switch">
+            <input 
+              type="checkbox" 
+              checked={useGpu} 
+              disabled={!gpuSupported}
+              onChange={(e) => setUseGpu(e.target.checked)} 
+            />
+            <span className="slider round"></span>
+          </label>
+          <span className={useGpu ? 'active' : ''}>
+            WebGPU {!gpuSupported && <span className="not-supported">(Not Supported)</span>}
+          </span>
+        </div>
+      </header>
       
       <div className="container">
         <section className="demo-section">

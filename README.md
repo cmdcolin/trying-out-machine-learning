@@ -2,13 +2,14 @@
 
 This repository contains a simple implementation of MNIST digit recognition using JAX for training and TypeScript for inference (both CLI and Web).
 
-## Prerequisites
+## 📚 Documentation
+- **[New to AI? Start Here](./docs/BEGINNERS_GUIDE.md)**: A programmer-friendly introduction.
+- **[The ML Engineer Mindset](./docs/ML_ENGINEER_MINDSET.md)**: A technical guide for developers.
+- **[Architecture Overview](./docs/OVERVIEW.md)**: How the project is organized.
+- **[Deep Dive: Training with JAX](./docs/TRAINING.md)**: The MLP, Autograd, and XLA.
+- **[Deep Dive: Inference Architecture](./docs/INFERENCE.md)**: Native TS vs WebGPU (WGSL).
 
-- Python 3.8+
-- Node.js & Yarn (or NPM)
-- `curl` (for downloading data)
-
-## Project Structure
+## 🚀 Setup
 
 - `packages/cli`: Node.js CLI inference demonstration.
 - `packages/web`: Vite + React web application.

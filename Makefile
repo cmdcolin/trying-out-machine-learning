@@ -13,6 +13,7 @@ setup:
 	python3 -m venv venv
 	./venv/bin/pip install -r requirements.txt
 	pnpm install
+	pnpm --filter @mnist-jax/core build
 
 train:
 	@echo "Training model..."
